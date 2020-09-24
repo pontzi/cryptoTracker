@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Http from '../../libraries/Http';
+import Colors from '../../resources/colors';
 import CoinsItem from './CoinsItem';
 
 const CoinsScreen = (props) => {
@@ -55,7 +56,7 @@ const CoinsScreen = (props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.charade,
   },
   titleText: {
     color: '#fff',
