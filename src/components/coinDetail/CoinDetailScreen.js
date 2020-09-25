@@ -1,9 +1,19 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, Image, StyleSheet, SectionList} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  SectionList,
+  FlatList,
+} from 'react-native';
 import Colors from '../../resources/colors';
+import Http from '../../libraries/Http';
+import CoinMarketItem from './CoinMarketItem';
 
 const CoinDetailScreen = (props) => {
-  const [state, setState] = useState({coin: {}});
+  const {coin} = props.route.params;
+  const [state, setState] = useState({coin, markets: []});
 
   const getSymbolIcon = (coinNameID) => {
     if (coinNameID) {
@@ -28,12 +38,19 @@ const CoinDetailScreen = (props) => {
     ];
     return sections;
   };
-  useEffect(() => {
-    const {coin} = props.route.params;
-    props.navigation.setOptions({title: coin.symbol});
+
+  const getMarkets = async (coinID) => {
+    const url = `https://api.coinlore.net/api/coin/markets/?id=${coinID}`;
+    const markets = await Http.instance.get(url);
     setState({
-      coin,
+      ...state,
+      markets,
     });
+  };
+
+  useEffect(() => {
+    props.navigation.setOptions({title: coin.symbol});
+    getMarkets(coin.id);
   }, []);
 
   return (
@@ -47,6 +64,7 @@ const CoinDetailScreen = (props) => {
       </View>
 
       <SectionList
+        style={styles.section}
         sections={getSections(state.coin)}
         keyExtractor={(item) => item}
         renderItem={({item}) => (
@@ -59,6 +77,13 @@ const CoinDetailScreen = (props) => {
             <Text style={styles.sectionText}>{section.title}</Text>
           </View>
         )}
+      />
+      <Text style={styles.marketsTitle}>Markets</Text>
+      <FlatList
+        style={styles.list}
+        horizontal={true}
+        data={state.markets}
+        renderItem={({item}) => <CoinMarketItem item={item} />}
       />
     </View>
   );
@@ -84,6 +109,13 @@ const styles = StyleSheet.create({
     width: 25,
     height: 25,
   },
+  section: {
+    maxHeight: 220,
+  },
+  list: {
+    maxHeight: 100,
+    paddingLeft: 16,
+  },
   sectionHeader: {
     backgroundColor: 'rgba(0,0,0,0.2)',
     padding: 8,
@@ -98,6 +130,13 @@ const styles = StyleSheet.create({
   sectionText: {
     color: '#fff',
     fontSize: 14,
+    fontWeight: 'bold',
+  },
+  marketsTitle: {
+    color: '#fff',
+    fontSize: 16,
+    marginBottom: 16,
+    marginLeft: 16,
     fontWeight: 'bold',
   },
 });
