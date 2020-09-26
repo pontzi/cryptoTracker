@@ -84,6 +84,7 @@ const CoinDetailScreen = (props) => {
         horizontal={true}
         data={state.markets}
         renderItem={({item}) => <CoinMarketItem item={item} />}
+        keyExtractor={(item) => `${item.base}-${item.name}-${item.quote}`}
       />
     </View>
   );

@@ -9,11 +9,13 @@ import {
 import Http from '../../libraries/Http';
 import Colors from '../../resources/colors';
 import CoinsItem from './CoinsItem';
+import CoinsSearch from './CoinsSearch';
 
 const CoinsScreen = (props) => {
   const [state, setState] = useState({
     coins: [],
     loading: false,
+    allCoins: [],
   });
 
   const getData = async () => {
@@ -27,6 +29,7 @@ const CoinsScreen = (props) => {
     setState({
       coins: response.data,
       loading: false,
+      allCoins: response.data,
     });
   };
 
@@ -38,10 +41,24 @@ const CoinsScreen = (props) => {
     props.navigation.navigate('CoinDetail', {coin});
   };
 
+  const handleSearch = (query) => {
+    const {allCoins} = state;
+    const filteredCoins = allCoins.filter((coin) => {
+      return (
+        coin.name.toLowerCase().includes(query.toLowerCase()) ||
+        coin.symbol.toLowerCase().includes(query.toLowerCase())
+      );
+    });
+    setState({
+      ...state,
+      coins: filteredCoins,
+    });
+  };
   const {coins, loading} = state;
 
   return (
     <View style={styles.container}>
+      <CoinsSearch onChange={handleSearch} />
       {loading ? (
         <ActivityIndicator color="#fff" size="large" style={styles.loader} />
       ) : null}
