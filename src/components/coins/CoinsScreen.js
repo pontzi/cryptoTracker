@@ -38,7 +38,8 @@ const CoinsScreen = (props) => {
   }, []);
 
   const handlePress = (coin) => {
-    props.navigation.navigate('CoinDetail', {coin});
+    const favoriteLoading = false;
+    props.navigation.navigate('CoinDetail', {coin, favoriteLoading});
   };
 
   const handleSearch = (query) => {

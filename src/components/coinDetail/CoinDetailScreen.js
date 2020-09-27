@@ -16,14 +16,12 @@ import CoinMarketItem from './CoinMarketItem';
 import Storage from '../../libraries/storage';
 
 const CoinDetailScreen = (props) => {
-  const {coin} = props.route.params;
-  const [currentCoin, setCurrentCoin] = useState({coinData: coin});
+  const {coin, favoriteLoading} = props.route.params;
+  const [currentCoin, setCurrentCoin] = useState(coin);
   const [markets, setMarkets] = useState({marketsData: [], loading: false});
-  const [favorite, setFavorite] = useState({isFavorite: false});
+  const [favorite, setFavorite] = useState(favoriteLoading);
 
-  const {isFavorite} = favorite;
   const {marketsData, loading} = markets;
-  const {coinData} = currentCoin;
 
   const getSymbolIcon = (coinNameID) => {
     if (coinNameID) {
@@ -80,36 +78,30 @@ const CoinDetailScreen = (props) => {
       {
         text: 'Remove',
         onPress: async () => {
-          const key = `favorite-${coinData.id}`;
+          const key = `favorite-${currentCoin.id}`;
           await Storage.instance.remove(key);
-          setFavorite({
-            isFavorite: false,
-          });
+          setFavorite(false);
         },
       },
     ]);
   };
 
   const addToFavorites = async () => {
-    const coin = JSON.stringify(coinData);
-    const key = `favorite-${coinData.id}`;
+    const coin = JSON.stringify(currentCoin);
+    const key = `favorite-${currentCoin.id}`;
 
     const stored = await Storage.instance.store(key, coin);
     if (stored) {
-      setFavorite({
-        isFavorite: true,
-      });
+      setFavorite(true);
     }
   };
 
   const getFavorite = async () => {
     try {
-      const key = `favorite-${coinData.id}`;
+      const key = `favorite-${currentCoin.id}`;
       const favoriteCoin = await Storage.instance.get(key);
       if (favoriteCoin != null) {
-        setFavorite({
-          isFavorite: true,
-        });
+        setFavorite(true);
       }
     } catch (error) {
       console.log('Get favorites error', error);
@@ -117,7 +109,7 @@ const CoinDetailScreen = (props) => {
   };
 
   const toggleFavorite = () => {
-    if (favorite.isFavorite) {
+    if (favorite) {
       removeFromFavorites();
     } else {
       addToFavorites();
@@ -125,9 +117,8 @@ const CoinDetailScreen = (props) => {
   };
 
   useEffect(() => {
-    props.navigation.setOptions({title: coin.symbol});
     getFavorite();
-    getMarkets(coinData.id);
+    getMarkets(currentCoin.id);
   }, []);
 
   return (
@@ -136,25 +127,27 @@ const CoinDetailScreen = (props) => {
         <View style={styles.row}>
           <Image
             style={styles.iconImg}
-            source={{uri: getSymbolIcon(coinData.nameid)}}
+            source={{uri: getSymbolIcon(currentCoin.nameid)}}
           />
-          <Text style={styles.titleText}>{coinData.name}</Text>
+          <Text style={styles.titleText}>{currentCoin.name}</Text>
         </View>
         <Pressable
           onPress={toggleFavorite}
           style={[
             styles.favoriteBtn,
-            isFavorite ? styles.favoriteRemoveBtn : styles.favoriteAddBtn,
+            favorite === true
+              ? styles.favoriteRemoveBtn
+              : styles.favoriteAddBtn,
           ]}>
           <Text style={styles.favoriteTextBtn}>
-            {isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            {favorite === true ? 'Remove from favorites' : 'Add to favorites'}
           </Text>
         </Pressable>
       </View>
 
       <SectionList
         style={styles.section}
-        sections={getSections(coinData)}
+        sections={getSections(currentCoin)}
         keyExtractor={(item) => item}
         renderItem={({item}) => (
           <View style={styles.sectionItem}>

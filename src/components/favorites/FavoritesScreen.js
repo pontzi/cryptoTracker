@@ -22,7 +22,8 @@ const FavoritesScreen = (props) => {
     }
   };
   const handlePress = (coin) => {
-    props.navigation.navigate('CoinDetail', {coin});
+    const favoriteLoading = true;
+    props.navigation.navigate('CoinDetail', {coin, favoriteLoading});
   };
   useEffect(() => {
     props.navigation.addListener('focus', getFavorites);
