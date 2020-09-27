@@ -31,12 +31,13 @@ class Storage {
     }
   };
 
-  getAllKeys = async () => {
+  getAllkeys = async () => {
     try {
       return await AsyncStorage.getAllKeys();
-    } catch (error) {
-      console.log('storage getAllKeys error', error);
-      throw Error(error);
+    } catch (err) {
+      console.log('storage getAllKeys err', err);
+
+      throw Error(err);
     }
   };
 

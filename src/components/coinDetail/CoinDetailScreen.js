@@ -7,6 +7,8 @@ import {
   SectionList,
   FlatList,
   Pressable,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import Colors from '../../resources/colors';
 import Http from '../../libraries/Http';
@@ -15,7 +17,13 @@ import Storage from '../../libraries/storage';
 
 const CoinDetailScreen = (props) => {
   const {coin} = props.route.params;
-  const [state, setState] = useState({coin, markets: [], isFavorite: false});
+  const [currentCoin, setCurrentCoin] = useState({coinData: coin});
+  const [markets, setMarkets] = useState({marketsData: [], loading: false});
+  const [favorite, setFavorite] = useState({isFavorite: false});
+
+  const {isFavorite} = favorite;
+  const {marketsData, loading} = markets;
+  const {coinData} = currentCoin;
 
   const getSymbolIcon = (coinNameID) => {
     if (coinNameID) {
@@ -42,31 +50,74 @@ const CoinDetailScreen = (props) => {
   };
 
   const getMarkets = async (coinID) => {
-    const url = `https://api.coinlore.net/api/coin/markets/?id=${coinID}`;
-    const markets = await Http.instance.get(url);
-    setState({
-      ...state,
-      markets,
+    setMarkets({
+      ...markets,
+      loading: true,
     });
+    try {
+      const url = `https://api.coinlore.net/api/coin/markets/?id=${coinID}`;
+      const markets = await Http.instance.get(url);
+
+      setMarkets({
+        marketsData: markets,
+        loading: false,
+      });
+    } catch (error) {
+      setMarkets({
+        marketsData: [],
+        loading: false,
+      });
+    }
+    console.log('markets', markets);
   };
 
-  const removeFromFavorites = () => {};
+  const removeFromFavorites = async () => {
+    Alert.alert('Remove favorite', 'Are you sure?', [
+      {
+        text: 'Cancel',
+        onPress: () => {},
+      },
+      {
+        text: 'Remove',
+        onPress: async () => {
+          const key = `favorite-${coinData.id}`;
+          await Storage.instance.remove(key);
+          setFavorite({
+            isFavorite: false,
+          });
+        },
+      },
+    ]);
+  };
 
-  const addToFavorites = () => {
-    const coin = JSON.stringify(state.coin);
-    const key = `favorite-${state.coin.id}`;
+  const addToFavorites = async () => {
+    const coin = JSON.stringify(coinData);
+    const key = `favorite-${coinData.id}`;
 
-    const stored = Storage.instance.store(key, coin);
+    const stored = await Storage.instance.store(key, coin);
     if (stored) {
-      setState({
-        ...state,
+      setFavorite({
         isFavorite: true,
       });
     }
   };
 
+  const getFavorite = async () => {
+    try {
+      const key = `favorite-${coinData.id}`;
+      const favoriteCoin = await Storage.instance.get(key);
+      if (favoriteCoin != null) {
+        setFavorite({
+          isFavorite: true,
+        });
+      }
+    } catch (error) {
+      console.log('Get favorites error', error);
+    }
+  };
+
   const toggleFavorite = () => {
-    if (state.isFavorite) {
+    if (favorite.isFavorite) {
       removeFromFavorites();
     } else {
       addToFavorites();
@@ -75,9 +126,9 @@ const CoinDetailScreen = (props) => {
 
   useEffect(() => {
     props.navigation.setOptions({title: coin.symbol});
-    getMarkets(coin.id);
+    getFavorite();
+    getMarkets(coinData.id);
   }, []);
-  const {isFavorite, markets} = state;
 
   return (
     <View style={styles.container}>
@@ -85,9 +136,9 @@ const CoinDetailScreen = (props) => {
         <View style={styles.row}>
           <Image
             style={styles.iconImg}
-            source={{uri: getSymbolIcon(state.coin.nameid)}}
+            source={{uri: getSymbolIcon(coinData.nameid)}}
           />
-          <Text style={styles.titleText}>{state.coin.name}</Text>
+          <Text style={styles.titleText}>{coinData.name}</Text>
         </View>
         <Pressable
           onPress={toggleFavorite}
@@ -103,7 +154,7 @@ const CoinDetailScreen = (props) => {
 
       <SectionList
         style={styles.section}
-        sections={getSections(state.coin)}
+        sections={getSections(coinData)}
         keyExtractor={(item) => item}
         renderItem={({item}) => (
           <View style={styles.sectionItem}>
@@ -117,10 +168,13 @@ const CoinDetailScreen = (props) => {
         )}
       />
       <Text style={styles.marketsTitle}>Markets</Text>
+      {loading ? (
+        <ActivityIndicator color="#fff" size="large" style={styles.loader} />
+      ) : null}
       <FlatList
         style={styles.list}
         horizontal={true}
-        data={markets}
+        data={marketsData}
         renderItem={({item}) => <CoinMarketItem item={item} />}
         keyExtractor={(item) => `${item.base}-${item.name}-${item.quote}`}
       />
@@ -194,6 +248,9 @@ const styles = StyleSheet.create({
   },
   favoriteTextBtn: {
     color: Colors.white,
+  },
+  loader: {
+    marginTop: 60,
   },
 });
 export default CoinDetailScreen;
