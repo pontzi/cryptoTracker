@@ -17,7 +17,7 @@ const CoinsStack = () => {
         headerTintColor: Colors.white,
       }}>
       <Stack.Screen name="Coins" component={CoinsScreen} />
-      <Stack.Screen name="CoinDetail" component={CoinDetailScreen} />
+      <Stack.Screen name="Coin detail" component={CoinDetailScreen} />
     </Stack.Navigator>
   );
 };

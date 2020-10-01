@@ -3,15 +3,14 @@ import {TextInput, Platform, View, StyleSheet} from 'react-native';
 import Colors from '../../resources/colors';
 
 const CoinsSearch = (props) => {
-  const [state, setState] = useState({query: ''});
-
+  const [query, setQuery] = useState('');
   const handleChangeText = (query) => {
-    setState({query});
+    setQuery(query);
     if (props.onChange) {
       props.onChange(query);
     }
   };
-  const {query} = state;
+
   return (
     <View>
       <TextInput
